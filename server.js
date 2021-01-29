@@ -2,7 +2,7 @@
 var net = require('net');
 require('./packet.js');
 
-const port = 3001;
+const port = 7101;
 
 
 net.createServer(function(socket){ //when client connects
@@ -26,10 +26,10 @@ console.log("Server running on port: " + port );
 
 //server time
 
-const sport = 3002;
+const sport = 7102;
 const server = require('http').createServer();
 const io = require('socket.io')(server);
-const version = "0.3.4";
+const version = "0.3.5";
 var total = 0; //total amount of clients that session
 var current = 0; //total amount of concurrent clients
 var gameid = 0; //array index and total amount of games
@@ -47,17 +47,17 @@ module.exports = { //from client.js
     newGame: function(gcount, game) {
         gameid = gcount;
         games[gameid] = game; // gameid - 1 ???
-        gamechunk = 0;
+        gamechunk = "";
         gameid ++;
         for (let i = 0; i < gameid; i++){
-            gamechunk += games[i];
+            gamechunk += games[i] + "&";
         }
     },
     updateGame: function(gid, game) {
         games[gid] = game;
-        gamechunk = 0;
+        gamechunk = "";
         for (let i = 0; i < gameid; i++){
-            gamechunk += games[i];
+            gamechunk += games[i] + "&";
         }
     },
     delGame: function(gcount, gid) {
@@ -69,11 +69,13 @@ module.exports = { //from client.js
                 games[c - 1] = games[c]; //shrink list
                 games[c] = 0;
             }
-            gameid--; //reduce game array index (total number of games)
+            gameid -= 1; //reduce game array index (total number of games)
         }
-        gamechunk = 0;
+        gamechunk = "";
         for (let i = 0; i < gameid; i++){
-            gamechunk += games[i];
+            if (games[i] !== 0) {
+                gamechunk += games[i] + "&";
+            }
         }
     }
 }

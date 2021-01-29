@@ -2,7 +2,7 @@
 var total = 0; //total amount of clients that session
 var current = 0; //total amount of concurrent clients
 var hostnum = 0; //total amount of hosts (total was getting too high to use as client.id in arrays)
-const version = "0.3.4";
+const version = "0.3.5";
 var games = [];
 var gameid = 0; //array index and total gamecount
 var breaknum; //for deleting client servers
@@ -13,14 +13,15 @@ var cleartimer = []; //game phase out timer
 require('./packet.js');
 var serv = require('./server.js');
 
-var tcpPortUsed = require('tcp-port-used');
+//var tcpPortUsed = require('tcp-port-used');
 
 function phaseOut(cip,hostnum) {
     //find & delete
     for (let i = 0; i < gameid; i++) { //check to see if they were hosting a server
-        idindex = (games[i].indexOf("IP") + 6); //see where "ID" is at, add 6 to get over quotation marks and spaces and shit
-        let idend = games[i].lastIndexOf('"');
-        idindex = games[i].substring(idindex, idend); //take "ID"'s location and keep reading for how long the client.id is
+        //idindex = (games[i].indexOf("IP") + 6); //see where "ID" is at, add 6 to get over quotation marks and spaces and shit
+        //let idend = games[i].lastIndexOf('"');
+        //idindex = games[i].substring(idindex, idend); //take "ID"'s location and keep reading for how long the client.id is
+        idindex = games[i]["IP"];
         if (idindex === cip) { //if the acquired string "a number" is equal to the client.id
             games[i] = 0; //blank it
             serv.delGame(gameid, i);
@@ -34,7 +35,7 @@ function phaseOut(cip,hostnum) {
                     games[c] = 0;
                 }
             }
-            gameid--; //reduce game array index (total number of games)
+            gameid -= 1; //reduce game array index (total number of games)
             break;
         }
     }
@@ -61,10 +62,12 @@ module.exports = function() {
         var mode = data.slice(0,1); //get rid of invisible character
         if (mode === "0"){ //client request game info
             console.log("sending gameslist to client " + client.id + "...");
-            let gamechunk = 0;
+            let gamechunk = "";
+            let game = "";
             for (let i = 0; i < gameid; i++){
                 if (games[i] !== 0){
-                    gamechunk += games[i];
+                    game = JSON.stringify(games[i]);
+                    gamechunk += (game + "&");
                 }
             }
             client.socket.write(packet.build([1,gameid.toString(),gamechunk.toString()])); //sync
@@ -72,44 +75,53 @@ module.exports = function() {
         else if (mode === "1") { //receive game data from new client game
             let vsn = data.includes(version.toString());
             if ((vsn === true) && (gameid < 50)){ //50 cap right now
-                idindex = (data.indexOf("IP") + 6); //see where "IP" is at, add 6 to get over quotation marks and spaces and shit
-                let idend = data.lastIndexOf('"');
-                idindex = data.substring(idindex, idend); //take "IP"'s location and keep reading for how long it continued before '"'
-                client.ip = idindex;
                 //tcpPortUsed.check(7100, client.ip)
                 //.then(function(inUse) {
                 // console.log('Port 7100 for client ' + client.id + ' in use: ' + inUse);
                 // if (inUse === true){
                 data = data.slice(8, data.length); //get rid of invisible character, mode number (0), '_', and version
-                games[gameid] = data;
-                console.log("game[" + gameid + "] from client " + client.id + ": " + games[gameid]);
-                client.host = true;
-                //#region find host num
-                let nohostnum = true;
-                for (let i = 0; i < hostnum; i++){
-                    if (cleartimer[i] == 0){ //if it's blank
-                        client.hostnum = i;
-                        nohostnum = false;
-                        break;
+                data = data.replace(/\0/g, '');
+                data = JSON.parse(data);
+                client.ip = data["IP"];
+                if (client.ip.length > 9) {
+                    games[gameid] = data;
+                    console.log("game[" + gameid + "] from client " + client.id + ": " + JSON.stringify(games[gameid]));
+                    client.host = true;
+                    //  idindex = (data.indexOf("IP") + 6); //see where "IP" is at, add 6 to get over quotation marks and spaces and shit
+                    //  let idend = data.lastIndexOf('"');
+                    //  idindex = data.substring(idindex, idend); //take "IP"'s location and keep reading for how long it continued before '"'
+                    //  client.ip = idindex;
+                    //#region find host num
+                    let nohostnum = true;
+                    for (let i = 0; i < hostnum; i++) {
+                        if (cleartimer[i] == 0) { //if it's blank
+                            client.hostnum = i;
+                            nohostnum = false;
+                            break;
+                        }
                     }
+                    if (nohostnum === true) {
+                        client.hostnum = hostnum; //host number
+                        hostnum++;
+                    }
+                    //#endregion
+                    clearTimeout(cleartimer[client.hostnum]);
+                    cleartimer[client.hostnum] = setTimeout(phaseOut, 62000, client.ip, client.hostnum);
+                    serv.newGame(gameid, JSON.stringify(games[gameid]));
+                    gameid++;
+                    //}
+                    //    else{ //port not in use (not forwarded)
+                    //        requestStop();
+                    //    }
+                    //  }, function(err) {
+                    //     console.log('Timeoout on check for ' + client.id + ': , err.message');
+                    //     requestStop();
+                    //  });
                 }
-                if (nohostnum === true) {
-                    client.hostnum = hostnum; //host number
-                    hostnum++;
+                else{
+                    requestStop();
+                    console.log("couldn't create server for " + client.id);
                 }
-                //#endregion
-                clearTimeout(cleartimer[client.hostnum]);
-                cleartimer[client.hostnum] = setTimeout(phaseOut, 62000, client.ip, client.hostnum);
-                serv.newGame(gameid, games[gameid]);
-                gameid++;
-                //}
-                //    else{ //port not in use (not forwarded)
-                //        requestStop();
-                //    }
-                //  }, function(err) {
-                //     console.log('Timeoout on check for ' + client.id + ': , err.message');
-                //     requestStop();
-                //  });
             }
             else if (((vsn === false) && (gameid < 50)) || ((vsn === false) && (gameid >= 50))){
                 requestStop();
@@ -129,14 +141,16 @@ module.exports = function() {
             if (vsn === true) {
                 //#region find & update game
                 data = data.slice(8, data.length); //get rid of invisible character, mode number (0), '_', and version
+                data = data.replace(/\0/g, '');
+                data = JSON.parse(data);
                 for (let i = 0; i < gameid; i++) { //check to see if they were hosting a server
-                    idindex = (games[i].indexOf("IP") + 6); //see where "IP" is at, add 6 to get over quotation marks and spaces and shit
-                    let idend = games[i].lastIndexOf('"');
-                    idindex = games[i].substring(idindex, idend); //take "IP"'s location and keep reading for how long it continued before '"'
+                    idindex = games[i]["IP"];
+                   // idindex = (games[i].indexOf("IP") + 6); //see where "IP" is at, add 6 to get over quotation marks and spaces and shit
+                   // let idend = games[i].lastIndexOf('"');
+                   // idindex = games[i].substring(idindex, idend); //take "IP"'s location and keep reading for how long it continued before '"'
                     if (idindex === client.ip) { //if the acquired string "a number" is equal to the client.iddddd
                         games[i] = data;
-                        //console.log("updated game for " + client.ip);
-                        serv.updateGame(i, games[i]);
+                        serv.updateGame(i, JSON.stringify(games[i]));
                         clearTimeout(cleartimer[client.hostnum]);
                         cleartimer[client.hostnum] = setTimeout(phaseOut, 62000, client.ip, client.hostnum);
                         break;
