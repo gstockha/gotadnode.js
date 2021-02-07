@@ -29,7 +29,8 @@ console.log("Server running on port: " + port );
 const sport = 7102;
 const server = require('http').createServer();
 const io = require('socket.io')(server);
-const version = "0.3.6";
+io.set('origins', "http://gotad.io:*")
+const version = "0.3.8";
 var total = 0; //total amount of clients that session
 var current = 0; //total amount of concurrent clients
 var gameid = 0; //array index and total amount of games
