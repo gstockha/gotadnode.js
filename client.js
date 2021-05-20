@@ -2,7 +2,7 @@
 var total = 0; //total amount of clients that session
 var current = 0; //total amount of concurrent clients
 var hostnum = 0; //total amount of hosts (total was getting too high to use as client.id in arrays)
-const version = "0.3.8";
+const version = "0.9.7";
 var games = [];
 var gameid = 0; //array index and total gamecount
 var breaknum; //for deleting client servers
@@ -13,6 +13,7 @@ var cleartimer = []; //game phase out timer
 require('./packet.js');
 var serv = require('./server.js');
 var tcpPortUsed = require('tcp-port-used');
+
 //#region unscramble
 var scramble = {"Q": "1", "A": "2", "Z": "3", "R": "4", "F": "5", "V": "6", "Y": "7", "H": "8", "N": "9", "O": "0", "P": "."};
 function unscramble(cip) {
@@ -39,12 +40,13 @@ function phaseOut(cip,hostnum) {
             console.log("game[" + i + "] deleted");
             clearTimeout(cleartimer[hostnum]);
             cleartimer[hostnum] = 0; //blanked!
-            if (i < gameid) { //condense
-                for (let c = breaknum; c < gameid; c++) {
-                    games[c - 1] = games[c]; //shrink list
-                    games[c] = 0;
-                }
-            }
+            //if (i < gameid) { //condense
+            games.splice(i,1);
+            //    for (let c = breaknum; c < gameid; c++) {
+            //        games[c - 1] = games[c]; //shrink list
+            //        games[c] = 0;
+            //    }
+            //}
             gameid -= 1; //reduce game array index (total number of games)
             break;
         }
@@ -63,7 +65,8 @@ module.exports = function() {
         let isFull = 0;
         if (gameid > 49) isFull = 1;
         client.socket.write(packet.build([0,version,isFull]));
-        console.log("client player connected; " + current + " concurrent players connected, " + total + " clients players so far");
+        let date = new Date();
+        console.log("client player connected; " + current + " concurrent players connected, " + total + " clients players so far " + date.getHours() + ":" + date.getMinutes());
         client.host = false;
     }
 
@@ -84,17 +87,27 @@ module.exports = function() {
         }
         else if (mode === "1") { //receive game data from new client game
             let vsn = data.includes(version.toString());
-            if ((vsn === true) && (gameid < 50)){ //50 cap right now
-                data = data.slice(8, data.length); //get rid of invisible character, mode number (0), '_', and version
-                data = data.replace(/\0/g, '');
-                data = JSON.parse(data);
-                client.ip = data["IP"];
+            data = data.slice(8, data.length); //get rid of invisible character, mode number (0), '_', and version
+            data = data.replace(/\0/g, '');
+            data = JSON.parse(data);
+            client.ip = data["IP"];
+            let IPget = 0;
+            let dupeIP = false;
+            for (let c = 0; c < gameid; c++){
+                IPget = games[c]["IP"];
+                if (client.ip === IPget){
+                    dupeIP = true;
+                    break;
+                }
+            }
+            if ((vsn === true) && (gameid < 50) && (dupeIP === false)){ //50 cap right now
                 let nucip = unscramble(client.ip);
                 tcpPortUsed.check(7100, nucip)
                     .then(function(inUse) {
                         if (inUse === true) {
                             games[gameid] = data;
-                            console.log("game[" + gameid + "] from client " + client.id + ": " + JSON.stringify(games[gameid]));
+                            let date = new Date();
+                            console.log("game[" + gameid + "] from client " + client.id + ": " + JSON.stringify(games[gameid]) + " " + date.getHours() + ":" + date.getMinutes());
                             client.host = true;
                             //#region find host num
                             let nohostnum = true;
@@ -187,7 +200,8 @@ module.exports = function() {
             phaseOut(client.ip,client.hostnum);
         }
         serv.delplayer();
-        console.log("client " + client.id + " closed");
+        let date = new Date();
+        console.log("client " + client.id + " closed " + date.getHours() + ":" + date.getMinutes());
         delete client;
     }
 

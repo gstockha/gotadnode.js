@@ -4,7 +4,6 @@ require('./packet.js');
 
 const port = 7101;
 
-
 net.createServer(function(socket){ //when client connects
 
     //console.log("socket connected");
@@ -29,8 +28,8 @@ console.log("Server running on port: " + port );
 const sport = 7102;
 const server = require('http').createServer();
 const io = require('socket.io')(server);
-io.set('origins', "http://gotad.io:*")
-const version = "0.3.8";
+//io.set('origins', "http://gotad.io:*")
+const version = "0.9.7";
 var total = 0; //total amount of clients that session
 var current = 0; //total amount of concurrent clients
 var gameid = 0; //array index and total amount of games
@@ -92,7 +91,8 @@ io.on('connection', (client) => {
 
     total ++;
     current ++;
-    console.log("browser player connected; " + current + " concurrent players connected, " + total + " players connected so far");
+    let date = new Date();
+    console.log("browser player connected; " + current + " concurrent players connected, " + total + " players connected so far " + date.getHours() + ":" + date.getMinutes());
     client.id = total;
 
     // Send clients SID
