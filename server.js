@@ -2,7 +2,7 @@
 var net = require('net');
 require('./packet.js');
 
-const port = 7101;
+const port = 3000;
 
 net.createServer(function(socket){ //when client connects
 
