@@ -25,7 +25,7 @@ console.log("Server running on port: " + port );
 
 //server time
 
-const sport = 7102;
+const sport = 3000;
 const server = require('http').createServer();
 const io = require('socket.io')(server);
 //io.set('origins', "http://gotad.io:*")
