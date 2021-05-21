@@ -2,7 +2,7 @@
 var net = require('net');
 require('./packet.js');
 
-const port = 3000;
+const port = 7101;
 
 net.createServer(function(socket){ //when client connects
 
@@ -25,7 +25,7 @@ console.log("Server running on port: " + port );
 
 //server time
 
-const sport = 80;
+const sport = 7102;
 const server = require('http').createServer();
 const io = require('socket.io')(server);
 //io.set('origins', "http://gotad.io:*")
