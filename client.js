@@ -2,7 +2,7 @@
 var total = 0; //total amount of clients that session
 var current = 0; //total amount of concurrent clients
 var hostnum = 0; //total amount of hosts (total was getting too high to use as client.id in arrays)
-const version = "0.0.1";
+const version = "1.0.2";
 var games = [];
 var gameid = 0; //array index and total gamecount
 var breaknum; //for deleting client servers
@@ -184,12 +184,13 @@ module.exports = function() {
     }
 
     this.error = function(err) {
-        current --;
+        err = err.toString();
+        if (err !== "Error: This socket has been ended by the other party"){ current --;}
         if (client.host === true) {
             phaseOut(client.ip,client.hostnum);
         }
         serv.delplayer();
-        console.log("client " + client.id + " error " + err.toString());
+        console.log("client " + client.id + " error " + err);
         delete client;
     } //basically identical to end event below
 
