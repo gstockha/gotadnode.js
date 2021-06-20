@@ -2,7 +2,7 @@
 var total = 0; //total amount of clients that session
 var current = 0; //total amount of concurrent clients
 var hostnum = 0; //total amount of hosts (total was getting too high to use as client.id in arrays)
-const version = "0.0.2";
+const version = "1.0.3";
 var games = [];
 var gameid = 0; //array index and total gamecount
 var breaknum; //for deleting client servers
@@ -195,7 +195,7 @@ module.exports = function() {
     } //basically identical to end event below
 
     this.end = function(){
-        current --;
+        //current --;
         //delete game
         if (client.host === true) { //he was host
             phaseOut(client.ip,client.hostnum);
