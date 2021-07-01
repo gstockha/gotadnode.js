@@ -3,7 +3,7 @@
   "version": "0.2.0",
   "private": true,
   "dependencies": {
-    "socket.io": "^2.2.0",
-    "tcp-port-used": "^1.0.2"
+    "socket.io": "2.2.0",
+    "tcp-port-used": "1.0.2"
   }
 }
