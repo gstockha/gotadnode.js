@@ -29,7 +29,7 @@ const sport = 7102;
 const server = require('http').createServer();
 const io = require('socket.io')(server);
 io.set('origins', "http://gotad.io:*")
-const version = "1.0.5";
+const version = "1.0.6";
 var total = 0; //total amount of clients that session
 var current = 0; //total amount of concurrent clients
 var gameid = 0; //array index and total amount of games
