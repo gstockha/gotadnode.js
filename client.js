@@ -2,7 +2,7 @@
 var total = 0; //total amount of clients that session
 var current = 0; //total amount of concurrent clients
 var hostnum = 0; //total amount of hosts (total was getting too high to use as client.id in arrays)
-const version = "1.0.8";
+const version = "1.0.9";
 var games = [];
 var gameid = 0; //array index and total gamecount
 var breaknum; //for deleting client servers
@@ -127,6 +127,7 @@ module.exports = function() {
                             cleartimer[client.hostnum] = setTimeout(phaseOut, 62000, client.ip, client.hostnum);
                             serv.newGame(gameid, JSON.stringify(games[gameid]));
                             gameid++;
+                            client.socket.write(packet.build([3,0])); //good note
                         }
                         else{ //port not in use (not forwarded)
                             requestStop();
@@ -178,7 +179,7 @@ module.exports = function() {
         }
 
         function requestStop() {
-            client.socket.write(packet.build([3]));
+            client.socket.write(packet.build([3,1]));
         }
 
     }
