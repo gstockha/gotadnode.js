@@ -28,7 +28,7 @@ console.log("Server running on port: " + port );
 const sport = 7102;
 const server = require('http').createServer();
 const io = require('socket.io')(server);
-io.set('origins', "http://127.0.0.1:51264/index.html")
+io.set('origins', "http://gotad.io:*")
 const version = "1.0.9";
 var total = 0; //total amount of clients that session
 var current = 0; //total amount of concurrent clients
