@@ -127,6 +127,7 @@ module.exports = function() {
                             cleartimer[client.hostnum] = setTimeout(phaseOut, 62000, client.ip, client.hostnum);
                             serv.newGame(gameid, JSON.stringify(games[gameid]));
                             gameid++;
+                            client.socket.write(packet.build([59]));
                         }
                         else{ //port not in use (not forwarded)
                             requestStop();
