@@ -1,21 +1,21 @@
 //client.js
-var total = 0; //total amount of clients that session
-var current = 0; //total amount of concurrent clients
-var hostnum = 0; //total amount of hosts (total was getting too high to use as client.id in arrays)
+let total = 0; //total amount of clients that session
+let current = 0; //total amount of concurrent clients
+let hostnum = 0; //total amount of hosts (total was getting too high to use as client.id in arrays)
 const version = "1.1.2";
-var games = [];
-var gameid = 0; //array index and total gamecount
-var breaknum; //for deleting client servers
-var idindex; //same^
-var cleartimer = []; //game phase out timer
+let games = [];
+let gameid = 0; //array index and total gamecount
+let breaknum; //for deleting client servers
+let idindex; //same^
+let cleartimer = []; //game phase out timer
 
 
 require('./packet.js');
-var serv = require('./server.js');
-var tcpPortUsed = require('tcp-port-used');
+let serv = require('./server.js');
+let tcpPortUsed = require('tcp-port-used');
 
 //#region unscramble
-var scramble = {"Q": "1", "A": "2", "Z": "3", "R": "4", "F": "5", "V": "6", "Y": "7", "H": "8", "N": "9", "O": "0", "P": "."};
+let scramble = {"Q": "1", "A": "2", "Z": "3", "R": "4", "F": "5", "V": "6", "Y": "7", "H": "8", "N": "9", "O": "0", "P": "."};
 function unscramble(cip) {
     let nucip = "";
     let ciplength = cip.length;
@@ -54,7 +54,7 @@ function phaseOut(cip,hostnum) {
 }
 
 module.exports = function() {
-    var client = this;
+    let client = this;
 
     this.initiate = function() {
         //send the handshake packet
@@ -72,7 +72,7 @@ module.exports = function() {
 
     this.data = function(data) {
         data = data.toString();
-        var mode = data.slice(0,1); //get rid of invisible character
+        let mode = data.slice(0,1); //get rid of invisible character
         if (mode === "0"){ //client request game info
             console.log("sending gameslist to client " + client.id + "...");
             let gamechunk = "";
@@ -102,7 +102,7 @@ module.exports = function() {
             }
             if ((vsn === true) && (gameid < 50) && (dupeIP === false)){ //50 cap right now
                 let nucip = unscramble(client.ip);
-                tcpPortUsed.check(7100, nucip)
+                tcpPortUsed.waitUntilUsedOnHost(7100, nucip, 5000, 10000)
                     .then(function(inUse) {
                         if (inUse === true) {
                             games[gameid] = data;
