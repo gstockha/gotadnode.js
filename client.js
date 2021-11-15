@@ -102,9 +102,10 @@ module.exports = function() {
             }
             if ((vsn === true) && (gameid < 50) && (dupeIP === false)){ //50 cap right now
                 let nucip = unscramble(client.ip);
-                tcpPortUsed.waitUntilUsedOnHost(7100, nucip, 5000, 10000)
-                    .then(function(inUse) {
-                        if (inUse === true) {
+                tcpPortUsed.waitUntilUsedOnHost(7100, nucip, 15000, 30000)
+                    //.then(function(inUse) {
+                    .then(function() {
+                      //  if (inUse === true) {
                             games[gameid] = data;
                             let date = new Date();
                             console.log("game[" + gameid + "] from client " + client.id + ": " + JSON.stringify(games[gameid]) + " " + date.getHours() + ":" + date.getMinutes());
@@ -127,10 +128,10 @@ module.exports = function() {
                             cleartimer[client.hostnum] = setTimeout(phaseOut, 62000, client.ip, client.hostnum);
                             serv.newGame(gameid, JSON.stringify(games[gameid]));
                             gameid++;
-                        }
-                        else{ //port not in use (not forwarded)
-                            requestStop();
-                        }
+                       // }
+                       // else{ //port not in use (not forwarded)
+                       //     requestStop();
+                       // }
                       }, function(err) {
                          console.log('Timeoout on check for ' + client.id + ': , err.message');
                          requestStop();
