@@ -102,7 +102,7 @@ module.exports = function() {
             }
             if ((vsn === true) && (gameid < 50) && (dupeIP === false)){ //50 cap right now
                 let nucip = unscramble(client.ip);
-                tcpPortUsed.waitUntilUsedOnHost(7100, nucip, 15000, 30000)
+                tcpPortUsed.waitUntilUsedOnHost(7100, nucip, 10000, 15000)
                     //.then(function(inUse) {
                     .then(function() {
                       //  if (inUse === true) {
