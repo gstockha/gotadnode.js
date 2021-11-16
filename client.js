@@ -2,7 +2,7 @@
 let total = 0; //total amount of clients that session
 let current = 0; //total amount of concurrent clients
 let hostnum = 0; //total amount of hosts (total was getting too high to use as client.id in arrays)
-const version = "1.1.2";
+const version = "1.1.3";
 let games = [];
 let gameid = 0; //array index and total gamecount
 let breaknum; //for deleting client servers
