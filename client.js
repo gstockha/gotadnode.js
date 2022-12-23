@@ -1,27 +1,28 @@
 //client.js
-var total = 0; //total amount of clients that session
-var current = 0; //total amount of concurrent clients
-var hostnum = 0; //total amount of hosts (total was getting too high to use as client.id in arrays)
-const version = "1.0.6";
-var games = [];
-var gameid = 0; //array index and total gamecount
-var breaknum; //for deleting client servers
-var idindex; //same^
-var cleartimer = []; //game phase out timer
+let total = 0; //total amount of clients that session
+let current = 0; //total amount of concurrent clients
+let hostnum = 0; //total amount of hosts (total was getting too high to use as client.id in arrays)
+const version = "1.1.9";
+let games = [];
+let gameid = 0; //array index and total gamecount
+let breaknum; //for deleting client servers
+let idindex; //same^
+let cleartimer = []; //game phase out timer
 
 
 require('./packet.js');
-var serv = require('./server.js');
-var tcpPortUsed = require('tcp-port-used');
+let serv = require('./server.js');
+let tcpPortUsed = require('tcp-port-used');
 
 //#region unscramble
-var scramble = {"Q": "1", "A": "2", "Z": "3", "R": "4", "F": "5", "V": "6", "Y": "7", "H": "8", "N": "9", "O": "0", "P": "."};
+let scramble = {"Q": "1", "A": "2", "Z": "3", "R": "4", "F": "5", "V": "6", "Y": "7", "H": "8", "N": "9", "O": "0", "P": "."};
 function unscramble(cip) {
     let nucip = "";
     let ciplength = cip.length;
     let slice = "";
     for (let i = ciplength; i > 0; i--){
         slice = cip.slice(i-1,i);
+        if (!scramble[slice]) return "";
         nucip += scramble[slice];
     }
     console.log(nucip);
@@ -54,7 +55,7 @@ function phaseOut(cip,hostnum) {
 }
 
 module.exports = function() {
-    var client = this;
+    let client = this;
 
     this.initiate = function() {
         //send the handshake packet
@@ -72,7 +73,7 @@ module.exports = function() {
 
     this.data = function(data) {
         data = data.toString();
-        var mode = data.slice(0,1); //get rid of invisible character
+        let mode = data.slice(0,1); //get rid of invisible character
         if (mode === "0"){ //client request game info
             console.log("sending gameslist to client " + client.id + "...");
             let gamechunk = "";
@@ -93,6 +94,7 @@ module.exports = function() {
             client.ip = data["IP"];
             let IPget = 0;
             let dupeIP = false;
+            let validIP = true;
             for (let c = 0; c < gameid; c++){
                 IPget = games[c]["IP"];
                 if (client.ip === IPget){
@@ -100,11 +102,15 @@ module.exports = function() {
                     break;
                 }
             }
-            if ((vsn === true) && (gameid < 50) && (dupeIP === false)){ //50 cap right now
-                let nucip = unscramble(client.ip);
-                tcpPortUsed.check(7100, nucip)
-                    .then(function(inUse) {
-                        if (inUse === true) {
+            //make a regex that checks for a valid ipv4 address
+            let nucip = unscramble(client.ip);
+            let ipregex = new RegExp("^(?:[0-9]{1,3}\\.){3}[0-9]{1,3}$");
+            if (ipregex.test(nucip) === false) validIP = false;
+            if ((vsn === true) && (gameid < 50) && (dupeIP === false) && (validIP === true)){ //50 cap right now
+                tcpPortUsed.waitUntilUsedOnHost(7100, nucip, 10000, 15000)
+                    //.then(function(inUse) {
+                    .then(function() {
+                      //  if (inUse === true) {
                             games[gameid] = data;
                             let date = new Date();
                             console.log("game[" + gameid + "] from client " + client.id + ": " + JSON.stringify(games[gameid]) + " " + date.getHours() + ":" + date.getMinutes());
@@ -127,10 +133,10 @@ module.exports = function() {
                             cleartimer[client.hostnum] = setTimeout(phaseOut, 62000, client.ip, client.hostnum);
                             serv.newGame(gameid, JSON.stringify(games[gameid]));
                             gameid++;
-                        }
-                        else{ //port not in use (not forwarded)
-                            requestStop();
-                        }
+                       // }
+                       // else{ //port not in use (not forwarded)
+                       //     requestStop();
+                       // }
                       }, function(err) {
                          console.log('Timeoout on check for ' + client.id + ': , err.message');
                          requestStop();
@@ -190,7 +196,7 @@ module.exports = function() {
             phaseOut(client.ip,client.hostnum);
         }
         serv.delplayer();
-        console.log("client " + client.id + " error " + err);
+        console.log("client " + client.id + " disconnected");
         delete client;
     } //basically identical to end event below
 
