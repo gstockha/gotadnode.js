@@ -79,7 +79,7 @@ module.exports = { //from client.js
     }
 }
 
-// Listen for incoming connections
+//Listen for incoming connections
 server.listen(sport, (err) => {
     if (err) throw err;
     console.log("socket.io server running on port: " + sport );
