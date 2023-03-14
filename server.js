@@ -26,7 +26,7 @@ console.log("Server running on port: " + port );
 //server time
 
 const sport = 7102;
-const server = require('https').createServer();
+const server = require('http').createServer();
 const io = require('socket.io')(server, { cors: { origin: "*" }});
 const version = "1.2.1";
 var total = 0; //total amount of clients that session
