@@ -28,7 +28,7 @@ console.log("Server running on port: " + port );
 const sport = 7102;
 const server = require('http').createServer();
 const io = require('socket.io')(server, { cors: { origin: "*" }});
-const version = "1.2.1";
+const version = "1.2.2";
 var total = 0; //total amount of clients that session
 var current = 0; //total amount of concurrent clients
 var gameid = 0; //array index and total amount of games
